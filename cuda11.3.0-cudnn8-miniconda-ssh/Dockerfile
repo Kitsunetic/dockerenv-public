@@ -18,7 +18,8 @@ RUN apt install -y --no-install-recommends \
     mercurial \
     openssh-client \
     procps \
-    subversion
+    subversion \
+    parallel
 ENV PATH /opt/conda/bin:$PATH
 ARG CONDA_VERSION=py39_4.10.3
 RUN set -x && \
