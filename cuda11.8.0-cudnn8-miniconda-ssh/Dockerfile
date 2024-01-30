@@ -68,6 +68,10 @@ RUN rm -rf /var/lib/apt/lists/*
 RUN echo 'alias ca="conda activate"' >> /root/.bashrc
 RUN echo 'conda activate' >> /root/.bashrc
 
+RUN mkdir /root/.pip
+RUN echo '[global]' >> /root/.pip/pip.conf
+RUN echo 'index-url = https://mirror.kakao.com/pypi/simple/' >> /root/.pip/pip.conf
+
 WORKDIR /root/dev
 
 # entry script
