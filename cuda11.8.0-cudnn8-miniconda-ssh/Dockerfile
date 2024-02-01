@@ -5,7 +5,9 @@ RUN apt update
 
 # basic
 RUN apt install -y --no-install-recommends \
-    nano tmux wget iputils-ping git g++ net-tools curl zip unzip ffmpeg
+    nano tmux wget iputils-ping git gcc-8 g++-8 net-tools curl zip unzip ffmpeg
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 700 --slave /usr/bin/g++ g++ /usr/bin/g++-7
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 800 --slave /usr/bin/g++ g++ /usr/bin/g++-8
 
 # miniconda (https://github.com/ContinuumIO/docker-images/blob/master/miniconda3/debian/Dockerfile)
 RUN apt-get update -q && \
@@ -68,9 +70,13 @@ RUN rm -rf /var/lib/apt/lists/*
 RUN echo 'alias ca="conda activate"' >> /root/.bashrc
 RUN echo 'conda activate' >> /root/.bashrc
 
+# @option: PIP mirror for kakao
 RUN mkdir /root/.pip
-RUN echo '[global]' >> /root/.pip/pip.conf
-RUN echo 'index-url = https://mirror.kakao.com/pypi/simple/' >> /root/.pip/pip.conf
+RUN echo '[global]' >> /etc/pip.conf
+RUN echo 'index-url = https://mirror.kakao.com/pypi/simple/' >> /etc/pip.conf
+RUN echo 'trusted-host = mirror.kakao.com' >> /etc/pip.conf
+RUN echo '[search]' >> /etc/pip.conf
+RUN echo 'index = https://mirror.kakao.com/pypi' >> /etc/pip.conf
 
 WORKDIR /root/dev
 

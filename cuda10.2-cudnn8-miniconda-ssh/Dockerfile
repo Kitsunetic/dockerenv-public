@@ -5,7 +5,9 @@ RUN apt update
 
 # basic
 RUN apt install -y --no-install-recommends \
-    nano tmux wget iputils-ping git g++ net-tools curl zip unzip ffmpeg
+    nano tmux wget iputils-ping git gcc-8 g++-8 net-tools curl zip unzip ffmpeg
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 700 --slave /usr/bin/g++ g++ /usr/bin/g++-7
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 800 --slave /usr/bin/g++ g++ /usr/bin/g++-8
 
 # miniconda (https://github.com/ContinuumIO/docker-images/blob/master/miniconda3/debian/Dockerfile)
 RUN apt install -y --no-install-recommends \
@@ -20,28 +22,29 @@ RUN apt install -y --no-install-recommends \
     procps \
     subversion \
     parallel
+
 ENV PATH /opt/conda/bin:$PATH
-ARG CONDA_VERSION=py39_4.10.3
+
+# Leave these args here to better use the Docker build cache
+ARG CONDA_VERSION=py311_23.11.0-1
+
 RUN set -x && \
     UNAME_M="$(uname -m)" && \
     if [ "${UNAME_M}" = "x86_64" ]; then \
-    MINICONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-${CONDA_VERSION}-Linux-x86_64.sh"; \
-    SHA256SUM="1ea2f885b4dbc3098662845560bc64271eb17085387a70c2ba3f29fff6f8d52f"; \
+        MINICONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-${CONDA_VERSION}-Linux-x86_64.sh"; \
+        SHA256SUM="5b3cefe534e23541f5f703f40d4818e361c3615dbf14651a0f29554c3fc3d0fd"; \
     elif [ "${UNAME_M}" = "s390x" ]; then \
-    MINICONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-${CONDA_VERSION}-Linux-s390x.sh"; \
-    SHA256SUM="1faed9abecf4a4ddd4e0d8891fc2cdaa3394c51e877af14ad6b9d4aadb4e90d8"; \
+        MINICONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-${CONDA_VERSION}-Linux-s390x.sh"; \
+        SHA256SUM="04586c734987a39114b81384014c2cfa89360c518371b6fa249d3062efca27fe"; \
     elif [ "${UNAME_M}" = "aarch64" ]; then \
-    MINICONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-${CONDA_VERSION}-Linux-aarch64.sh"; \
-    SHA256SUM="4879820a10718743f945d88ef142c3a4b30dfc8e448d1ca08e019586374b773f"; \
-    elif [ "${UNAME_M}" = "ppc64le" ]; then \
-    MINICONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-${CONDA_VERSION}-Linux-ppc64le.sh"; \
-    SHA256SUM="fa92ee4773611f58ed9333f977d32bbb64769292f605d518732183be1f3321fa"; \
+        MINICONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-${CONDA_VERSION}-Linux-aarch64.sh"; \
+        SHA256SUM="63c06a1974695e50bbe767a030903d169e637e42d5b7b6d30876b19a01fbbad8"; \
     fi && \
     wget "${MINICONDA_URL}" -O miniconda.sh -q && \
     echo "${SHA256SUM} miniconda.sh" > shasum && \
     if [ "${CONDA_VERSION}" != "latest" ]; then sha256sum --check --status shasum; fi && \
     mkdir -p /opt && \
-    sh miniconda.sh -b -p /opt/conda && \
+    bash miniconda.sh -b -p /opt/conda && \
     rm miniconda.sh shasum && \
     ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
     echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
@@ -64,6 +67,14 @@ RUN rm -rf /var/lib/apt/lists/*
 
 RUN echo 'alias ca="conda activate"' >> /root/.bashrc
 RUN echo 'conda activate' >> /root/.bashrc
+
+# @option: PIP mirror for kakao
+RUN mkdir /root/.pip
+RUN echo '[global]' >> /etc/pip.conf
+RUN echo 'index-url = https://mirror.kakao.com/pypi/simple/' >> /etc/pip.conf
+RUN echo 'trusted-host = mirror.kakao.com' >> /etc/pip.conf
+RUN echo '[search]' >> /etc/pip.conf
+RUN echo 'index = https://mirror.kakao.com/pypi' >> /etc/pip.conf
 
 WORKDIR /root/dev
 
